@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<install version="1.0" type="eshopplugin" group="payment">
+    <name>os_concordpay</name>
+    <title>ConcordPay</title>
+    <author>ConcordPay</author>
+    <creationDate>2022-01-12</creationDate>
+    <copyright>Copyright (C) 2022 ConcordPay. All rights reserved.</copyright>
+    <license>GNU/GPLv3 https://www.gnu.org/licenses/gpl-3.0.html</license>
+    <authorEmail>info@mustpay.tech</authorEmail>
+    <authorUrl>https://mustpay.tech</authorUrl>
+    <version>1.0.0</version>
+    <description>ConcordPay Payment Gateway for EShop</description>
+    <config>
+        <fields name="params" addfieldpath="/administrator/components/com_eshop/elements">
+            <fieldset name="basic" addfieldpath="/administrator/components/com_eshop/elements">
+                <field type="text"
+                       name="checkout_description"
+                       size="50"
+                       label="Default description of payment"
+                       default="Payment Visa, Mastercard, Google Pay, Apple Pay"
+                       description="The description of payment."
+                />
+                <field type="text"
+                       name="merchant_id"
+                       size="10"
+                       label="Merchant ID"
+                       default=""
+                       description="Unique ID of the store in ConcordPay system"
+                />
+                <field type="text"
+                       name="secret_key"
+                       size="50"
+                       label="Secret Key"
+                       default=""
+                       description="Unique Key of the store in ConcordPay system"
+                />
+                <field type="concordpayorderstatus"
+                       name="status_approved"
+                       size="50"
+                       default="9"
+                       label="Status after successful payment"
+                />
+                <field type="concordpayorderstatus"
+                       name="status_declined"
+                       size="50"
+                       default="7"
+                       label="Status after invalid payment"
+                />
+                <field type="concordpayorderstatus"
+                       name="status_refunded"
+                       size="50"
+                       default="11"
+                       label="Status after refunded payment"
+                />
+                <field name="language"
+                       type="list"
+                       default="uk"
+                       label="Payment page language"
+                       description="Payment page language">
+                    <option value="uk">UA</option>
+                    <option value="ru">RU</option>
+                    <option value="en">EN</option>
+                </field>
+            </fieldset>
+        </fields>
+    </config>
+    <files>
+        <filename>os_concordpay.php</filename>
+        <filename>ConcordPayApi.php</filename>
+    </files>
+</install>
