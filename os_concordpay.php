@@ -23,6 +23,22 @@ class os_concordpay extends os_payment
 	// Order ID by table #__eshop_orderstatusdetails.
 	public const CONCORDPAY_ORDER_STATUS_REFUNDED = 11;
 
+    /**
+     * Translatable phrases.
+     *
+     * @var string[]
+     *
+     * @since 3.8.0
+     */
+    protected static $phrases = [
+        'Payment on the site' => [
+            'en-GB' => 'Payment on the site',
+            'ua-UK' => 'Оплата картой на сайті',
+            'uk-UK' => 'Оплата картой на сайті',
+            'ru-RU' => 'Оплата картой на сайте',
+        ]
+    ];
+
 	/**
 	 * @var ConcordPayApi
 	 *
@@ -72,15 +88,17 @@ class os_concordpay extends os_payment
 		parent::__construct($params, $config);
 	}
 
-	/**
-	 * Payment processing.
-	 *
-	 * @param   array $data Order info.
-	 *
-	 * @return void
-	 *
-	 * @since 3.8.0
-	 */
+    /**
+     * Payment processing.
+     *
+     * @param array $data Order info.
+     *
+     * @return void
+     *
+     * @throws Exception
+     *
+     * @since 3.8.0
+     */
 	public function processPayment($data)
 	{
 		$this->url = $this->concordpay->getApiUrl();
@@ -92,14 +110,10 @@ class os_concordpay extends os_payment
 		$phone     = $data['telephone'];
 		$email     = $data['email'];
 
-		$description = 'Оплата картой на сайте ' . htmlspecialchars($_SERVER['HTTP_HOST'])
+		$description = self::cpTranslate('Payment on the site') . ' ' . htmlspecialchars($_SERVER['HTTP_HOST'])
 			. " , $firstname $lastname, $phone.";
 
-		// TODO: Разработка модуля производилась на версии EShop 3.3.0, где присутствует ошибка,
-		//  из-за которой возврат пользователя на сайт магазина после успешной оплаты приводит к выводу
-		//  сообщения "Order is not existed!".
-		//  Данный момент надо проверить на более новой версии EShop для параметра $approveUrl.
-		$approveUrl  = $siteUrl . 'index.php?option=com_eshop&view=checkout&layout=complete' . $orderId;
+		$approveUrl  = $siteUrl . 'index.php?option=com_eshop&view=checkout&layout=complete&id=' . $orderId;
 		$declineUrl  = $siteUrl . 'index.php?option=com_eshop&view=checkout&layout=cancel&id=' . $orderId;
 		$cancelUrl   = $siteUrl . 'index.php?option=com_eshop&view=checkout&layout=cancel&id=' . $orderId;
 		$callbackUrl = $siteUrl . 'index.php?option=com_eshop&task=checkout.verifyPayment&payment_method=os_concordpay&type=notify';
@@ -115,6 +129,7 @@ class os_concordpay extends os_payment
 			'decline_url'  => $declineUrl,
 			'cancel_url'   => $cancelUrl,
 			'callback_url' => $callbackUrl,
+            'language'     => $this->language,
 			// Statistics.
 			'client_last_name'  => $firstname,
 			'client_first_name' => $lastname,
@@ -127,13 +142,15 @@ class os_concordpay extends os_payment
 		$this->submitPost($this->url, $orderInfo);
 	}
 
-	/**
-	 * Process payment
-	 *
-	 * @return boolean
-	 *
-	 * @since 3.8.0
-	 */
+    /**
+     * Process payment
+     *
+     * @return boolean
+     *
+     * @throws Exception
+     *
+     * @since 3.8.0
+     */
 	public function verifyPayment()
 	{
 		$data = json_decode(file_get_contents('php://input'), true);
@@ -217,8 +234,7 @@ class os_concordpay extends os_payment
 
 					EshopHelper::completeOrder($order);
 					JPluginHelper::importPlugin('eshop');
-					$dispatcher = JDispatcher::getInstance();
-					$dispatcher->trigger('onAfterCompleteOrder', array($order));
+                    JFactory::getApplication()->triggerEvent('onAfterCompleteOrder', array($order));
 
 					// Send confirmation email here
 					if (EshopHelper::getConfigValue('order_alert_mail'))
@@ -244,4 +260,20 @@ class os_concordpay extends os_payment
 
 		return false;
 	}
+
+    /**
+     * Custom translate method for plugin strings.
+     *
+     * @param $text
+     * @return string|string[]
+     * @throws Exception
+     * @since 3.8.0
+     */
+    protected static function cpTranslate($text)
+    {
+        $lang = JFactory::getApplication()->getLanguage()->getTag();
+        $translations = self::$phrases;
+
+        return $translations[$text][$lang] ?? $text;
+    }
 }
